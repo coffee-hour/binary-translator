@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  var STORAGE_KEY = 'binary-translator:state';
+
   var textInput = document.getElementById('textInput');
   var binInput = document.getElementById('binInput');
   var binPreview = document.getElementById('binPreview');
@@ -28,6 +30,31 @@
 
   function byteToBits(b) {
     return b.toString(2).padStart(8, '0');
+  }
+
+  // Persistence: save the raw text and binary inputs so they survive reloads.
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ text: textInput.value, bin: binInput.value }));
+    } catch (e) {
+      // storage may be unavailable (private mode, quota); translation still works without it
+    }
+  }
+
+  function loadState() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      var data = JSON.parse(raw);
+      if (!data || typeof data.text !== 'string' || typeof data.bin !== 'string') return null;
+      return data;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearState() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
   }
 
   // Binary -> bytes. Whitespace separates groups; anything other than 0/1 is invalid.
@@ -89,7 +116,8 @@
     renderNumeric(bytes);
   }
 
-  function fromBinary() {
+  // updateText=false is used on restore so the saved text is shown exactly as typed.
+  function fromBinary(updateText) {
     var raw = binInput.value;
     var parsed = parseBinary(raw);
     renderPreview(raw, parsed);
@@ -98,7 +126,7 @@
     var valid = parsed.invalid.size === 0 && parsed.remainder === 0;
     textMeta.textContent = valid ? plural(parsed.bytes.length, 'byte') : 'fix binary input';
     // Decode only when the input is fully valid; otherwise leave text untouched.
-    if (valid) textInput.value = decoder.decode(new Uint8Array(parsed.bytes));
+    if (updateText && valid) textInput.value = decoder.decode(new Uint8Array(parsed.bytes));
     renderNumeric(parsed.bytes);
   }
 
@@ -106,13 +134,15 @@
     if (updating) return;
     updating = true;
     fromText();
+    saveState();
     updating = false;
   });
 
   binInput.addEventListener('input', function () {
     if (updating) return;
     updating = true;
-    fromBinary();
+    fromBinary(true);
+    saveState();
     updating = false;
   });
 
@@ -129,6 +159,22 @@
     textMeta.textContent = '';
     binMeta.textContent = '';
     byteRows.innerHTML = '';
+    clearState();
     textInput.focus();
   });
+
+  // Restore on page load.
+  var saved = loadState();
+  if (saved && (saved.text || saved.bin)) {
+    updating = true;
+    textInput.value = saved.text;
+    binInput.value = saved.bin;
+    if (saved.bin.trim()) {
+      fromBinary(false);
+    } else {
+      fromText();
+      binInput.value = saved.bin;
+    }
+    updating = false;
+  }
 })();

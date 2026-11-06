@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+  <title>Binary Translator</title>
+  <link rel='stylesheet' href='style.css' />
+</head>
+<body>
+  <main class='wrap'>
+    <header class='top'>
+      <h1>binary/text</h1>
+      <label class='toggle'><input type='checkbox' id='showNumeric' /> decimal / hex</label>
+    </header>
+
+    <section class='panel'>
+      <div class='label-row'><span>text</span><span id='textMeta' class='meta'></span></div>
+      <textarea id='textInput' spellcheck='false' rows='5' placeholder='type text here'></textarea>
+    </section>
+
+    <section class='panel'>
+      <div class='label-row'><span>binary</span><span id='binMeta' class='meta'></span></div>
+      <textarea id='binInput' spellcheck='false' rows='5' placeholder='01001000 01101001'></textarea>
+      <div id='binPreview' class='preview' aria-live='polite'></div>
+      <div id='binErrors' class='errors' role='alert'></div>
+    </section>
+
+    <section class='panel' id='numericPanel' hidden>
+      <div class='label-row'><span>bytes</span><span class='meta'>utf-8</span></div>
+      <div class='table-wrap'>
+        <table>
+          <thead><tr><th>#</th><th>binary</th><th>dec</th><th>hex</th><th>char</th></tr></thead>
+          <tbody id='byteRows'></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class='foot'>
+      <button id='clearBtn' type='button'>clear</button>
+      <span class='meta'>live &middot; utf-8 &middot; 8-bit groups</span>
+    </footer>
+  </main>
+  <script src='script.js'></script>
+</body>
+</html>
